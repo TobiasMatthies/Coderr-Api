@@ -38,10 +38,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only=True, default=serializers.CurrentUserDefault()
     )
     username = serializers.CharField(source="user.username", read_only=True)
-    email = serializers.EmailField(source="user.email", read_only=True)
     type = serializers.CharField(source="user.type", read_only=True)
     firstname = serializers.CharField(source="user.first_name", read_only=True)
     lastname = serializers.CharField(source="user.last_name", read_only=True)
+    # Writeable user fields for update
+    first_name = serializers.CharField(write_only=True, required=False)
+    last_name = serializers.CharField(write_only=True, required=False)
+    email = serializers.EmailField(source="user.email", required=False)
 
     class Meta:
         model = Profile
@@ -52,9 +55,33 @@ class ProfileSerializer(serializers.ModelSerializer):
             "working_hours",
             "user",
             "username",
-            "email",
             "type",
             "firstname",
             "lastname",
             "created_at",
+            "first_name",
+            "last_name",
+            "email",
         ]
+
+    def update(self, instance, validated_data):
+        user_data = {}
+        user_fields = ["first_name", "last_name"]
+        for field in user_fields:
+            if field in validated_data:
+                user_data[field] = validated_data.pop(field)
+
+        # Handle email update separately
+        user_dict = validated_data.pop("user", None)
+        if user_dict and "email" in user_dict:
+            user_data["email"] = user_dict["email"]
+        # Update Profile fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        # Update User fields
+        user = instance.user
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
+        user.save()
+        return instance
