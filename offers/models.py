@@ -4,7 +4,7 @@ from users.models import User
 # Create your models here.
 class Offer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='offers')
-    title = models.CharField(max_length=255),
+    title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='offers/', blank=True, null=True)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
