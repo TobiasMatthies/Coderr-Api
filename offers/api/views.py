@@ -7,6 +7,6 @@ class OfferViewSet(ModelViewSet):
     """
     API view to list and create offers.
     """
-    queryset = Offer.objects.all()
+    queryset = Offer.objects.all().prefetch_related('details')
     serializer_class = OfferSerializer
     pagination_class = PageNumberPagination
