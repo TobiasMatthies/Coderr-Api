@@ -69,6 +69,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "file",
         ]
 
     def update(self, instance, validated_data):
@@ -92,3 +93,28 @@ class ProfileSerializer(serializers.ModelSerializer):
             setattr(user, attr, value)
         user.save()
         return instance
+
+
+class ProfileListSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True, default=serializers.CurrentUserDefault()
+    )
+    username = serializers.CharField(source="user.username", read_only=True)
+    type = serializers.CharField(source="user.type", read_only=True)
+    firstname = serializers.CharField(source="user.first_name", read_only=True)
+    lastname = serializers.CharField(source="user.last_name", read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = [
+            "description",
+            "location",
+            "tel",
+            "working_hours",
+            "user",
+            "username",
+            "type",
+            "firstname",
+            "lastname",
+            "file",
+        ]

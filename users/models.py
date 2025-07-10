@@ -30,6 +30,7 @@ class Profile(models.Model):
     tel = models.CharField(max_length=15, blank=True, null=True, help_text='Telephone number of the user.')
     working_hours = models.CharField(max_length=50, blank=True, null=True, help_text='Working hours of the user.')
     created_at = models.DateTimeField(auto_now_add=True, help_text='Date and time when the profile was created.')
+    file = models.FileField(upload_to='profile-picture/', blank=True, null=True)
 
     def __str__(self):
         return self.user.username

@@ -3,14 +3,14 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
-from users.api.serializers import UserRegistrationSerializer, ProfileSerializer
+from users.api.serializers import UserRegistrationSerializer, ProfileSerializer, ProfileListSerializer
 from users.api.permissions import IsOwner
 from users.models import Profile
 
 
-class RegistrationView(ObtainAuthToken):
+class RegistrationAPIView(ObtainAuthToken):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -29,7 +29,7 @@ class RegistrationView(ObtainAuthToken):
         )
 
 
-class LoginView(ObtainAuthToken):
+class LoginAPIView(ObtainAuthToken):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -47,7 +47,7 @@ class LoginView(ObtainAuthToken):
         )
 
 
-class ProfileRetrieveUpdateView(RetrieveUpdateAPIView):
+class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
     View to retrieve and update user profile.
     """
@@ -67,3 +67,21 @@ class ProfileRetrieveUpdateView(RetrieveUpdateAPIView):
         profile = get_object_or_404(self.queryset, user__id=user_id)
         self.check_object_permissions(self.request, profile)
         return profile
+
+
+class ProfileListAPIView(ListAPIView):
+    """
+    View to list all user profiles based on the given url parameter.
+    """
+
+    serializer_class = ProfileListSerializer
+    queryset = Profile.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        profile_type = self.kwargs.get("profile_type")
+
+        if profile_type == "business":
+            return Profile.objects.filter(user__type="business")
+        elif profile_type == "customer":
+            return Profile.objects.filter(user__type="customer")

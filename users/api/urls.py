@@ -1,12 +1,16 @@
-from django.urls import path, include
-from .views import RegistrationView, LoginView, ProfileRetrieveUpdateView
+from django.urls import path, register_converter
+from .views import RegistrationAPIView, LoginAPIView, ProfileRetrieveUpdateAPIView, ProfileListAPIView
+from .converters import ProfileTypeConverter
+
+register_converter(ProfileTypeConverter, 'profiletype')
 
 urlpatterns = [
-    path("registration/", RegistrationView.as_view(), name="registration"),
-    path("login/", LoginView.as_view(), name="login"),
+    path("registration/", RegistrationAPIView.as_view(), name="registration"),
+    path("login/", LoginAPIView.as_view(), name="login"),
     path(
         "profile/<int:id>",
-        ProfileRetrieveUpdateView.as_view(),
+        ProfileRetrieveUpdateAPIView.as_view(),
         name="profile_retrieve_update",
     ),
+    path('profiles/<profiletype:profile_type>/', ProfileListAPIView.as_view(), name='profiles-list'),
 ]
