@@ -1,10 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from users.api.serializers import UserRegistrationSerializer, ProfileSerializer, ProfileListSerializer
 from users.api.permissions import IsOwner
 from users.models import Profile
