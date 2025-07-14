@@ -1,8 +1,8 @@
-from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
-from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveUpdateDestroySerializer
-from offers.models import Offer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveUpdateDestroySerializer, OfferDetailSerializer
+from offers.models import Offer, OfferDetail
 from users.api.permissions import IsBusinessUser, IsOwner
 
 class OfferListCreateAPIView(ListCreateAPIView):
@@ -26,10 +26,20 @@ class OfferRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Offer.objects.all()
     serializer_class = OfferRetrieveUpdateDestroySerializer
+    lookup_field = 'pk'
 
     def get_permissions(self):
         if self.request.method in ['GET']:
-            return [AllowAny()]
+            return [IsAuthenticated()]
         elif self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [IsOwner()]
         return super().get_permissions()
+
+
+class OfferDetailRetrieveAPIView(RetrieveAPIView):
+    """
+    API view to retrieve offer details.
+    """
+    queryset = OfferDetail.objects.all()
+    serializer_class = OfferDetailSerializer
+    permission_classes = [IsAuthenticated]

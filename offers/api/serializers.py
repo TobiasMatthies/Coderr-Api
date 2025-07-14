@@ -10,6 +10,15 @@ class OfferDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'offer')
 
 
+class OfferDetailLinkSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = OfferDetail
+        fields = ['id', 'url']
+        extra_kwargs = {
+            'url': {'view_name': 'offerdetail', 'lookup_field': 'pk'}
+        }
+
+
 class OfferListCreateSerializer(serializers.ModelSerializer):
     user_details = UserDetailsSerializer(source='user', read_only=True)
     details = OfferDetailSerializer(many=True)
@@ -59,7 +68,8 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
         return data
 
 
-class OfferRetrieveUpdateDestroySerializer(serializers.HyperlinkedModelSerializer):
+class OfferRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
+    details = OfferDetailLinkSerializer(many=True, read_only=True)
 
     class Meta:
         model = Offer
