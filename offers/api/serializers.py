@@ -74,4 +74,4 @@ class OfferRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
-        read_only_fields = ('created_at', 'updated_at', 'min_price', 'min_delivery_time', 'user')
+        read_only_fields = ('created_at', 'updated_at', 'min_delivery_time', 'user')
