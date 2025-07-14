@@ -13,6 +13,8 @@ class OfferDetailSerializer(serializers.ModelSerializer):
 class OfferListCreateSerializer(serializers.ModelSerializer):
     user_details = UserDetailsSerializer(source='user', read_only=True)
     details = OfferDetailSerializer(many=True)
+    min_price = serializers.SerializerMethodField()
+    min_delivery_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
@@ -23,13 +25,21 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         detail_data = validated_data.pop('details')
         user = self.context['request'].user
-        min_price = min(detail['price'] for detail in detail_data)
-        min_delivery_time = min(detail['delivery_time_in_days'] for detail in detail_data)
 
-        offer = Offer.objects.create(user=user, min_price=min_price, min_delivery_time=min_delivery_time, **validated_data)
+        offer = Offer.objects.create(user=user, **validated_data)
         for detail in detail_data:
             OfferDetail.objects.create(offer=offer, **detail)
         return offer
+
+
+    def get_min_price(self, instance):
+        detail_data = instance.details.all()
+        return  min(detail.price for detail in detail_data)
+
+
+    def get_min_delivery_time(self, instance):
+        detail_data = instance.details.all()
+        return min(detail.delivery_time_in_days for detail in detail_data)
 
 
     def validate(self, data):
@@ -47,3 +57,11 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(f"Offer must have a detail of type {type}.")
 
         return data
+
+
+class OfferRetrieveUpdateDestroySerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Offer
+        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
+        read_only_fields = ('created_at', 'updated_at', 'min_price', 'min_delivery_time', 'user')

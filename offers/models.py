@@ -9,8 +9,6 @@ class Offer(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    min_price = models.PositiveIntegerField()
-    min_delivery_time = models.PositiveIntegerField(help_text="Delivery time in days")
 
 
 class OfferDetail(models.Model):
