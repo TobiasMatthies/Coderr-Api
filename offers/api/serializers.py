@@ -10,7 +10,7 @@ class OfferDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'offer')
 
 
-class OfferSerializer(serializers.ModelSerializer):
+class OfferListCreateSerializer(serializers.ModelSerializer):
     user_details = UserDetailsSerializer(source='user', read_only=True)
     details = OfferDetailSerializer(many=True)
 
@@ -39,7 +39,11 @@ class OfferSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("An offer must have exactly 3 details.")
 
         for type in ['basic', 'standard', 'premium']:
-            if not any(detail['offer_type'] == type for detail in offerdetails):
-                raise serializers.ValidationError(f"Offer must have a detail of type {type}.")
+            for detail in offerdetails:
+                offer_serializer = OfferDetailSerializer(data=detail)
+                if not offer_serializer.is_valid():
+                    raise serializers.ValidationError(f"Detail for {type} type is invalid: {offer_serializer.errors}")
+                if not any(detail['offer_type'] == type for detail in offerdetails):
+                    raise serializers.ValidationError(f"Offer must have a detail of type {type}.")
 
         return data
