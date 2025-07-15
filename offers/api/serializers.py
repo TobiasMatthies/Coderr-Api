@@ -42,13 +42,11 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
 
 
     def get_min_price(self, instance):
-        detail_data = instance.details.all()
-        return  min(detail.price for detail in detail_data)
+        return getattr(instance, 'min_price')
 
 
     def get_min_delivery_time(self, instance):
-        detail_data = instance.details.all()
-        return min(detail.delivery_time_in_days for detail in detail_data)
+        return getattr(instance, 'min_delivery_time')
 
 
     def validate(self, data):
