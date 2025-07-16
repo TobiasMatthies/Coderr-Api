@@ -1,7 +1,6 @@
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from django.db.models import Min
 from django_filters.rest_framework import DjangoFilterBackend
 from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveUpdateDestroySerializer, OfferDetailSerializer
@@ -16,10 +15,11 @@ class OfferListCreateAPIView(ListCreateAPIView):
     """
     serializer_class = OfferListCreateSerializer
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_class = OfferFilter
     ordering_fields = ['updated_at', 'min_price']
     ordering = ['updated_at']
+    search_fields = ['title', 'description']
 
     def get_queryset(self):
         queryset =  Offer.objects.all().prefetch_related('details')
