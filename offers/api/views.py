@@ -2,9 +2,10 @@ from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIVi
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from django.db.models import Min
 from django_filters.rest_framework import DjangoFilterBackend
-from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveUpdateDestroySerializer, OfferDetailSerializer
+from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveDestroySerializer, OfferUpdateSerializer, OfferDetailSerializer
 from offers.models import Offer, OfferDetail
 from users.api.permissions import IsBusinessUser, IsOwner
 from offers.api.filters import OfferFilter
@@ -68,8 +69,12 @@ class OfferRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     API view to retrieve, update, or delete an offer.
     """
     queryset = Offer.objects.all()
-    serializer_class = OfferRetrieveUpdateDestroySerializer
     lookup_field = 'pk'
+
+    def get_serializer_class(self):
+        if self.request.method == 'PATCH':
+            return OfferUpdateSerializer
+        return OfferRetrieveDestroySerializer
 
     def get_permissions(self):
         if self.request.method in ['GET']:

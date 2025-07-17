@@ -57,16 +57,50 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
 
         for type in ['basic', 'standard', 'premium']:
             for detail in offerdetails:
-                offer_serializer = OfferDetailSerializer(data=detail)
-                if not offer_serializer.is_valid():
-                    raise serializers.ValidationError(f"Detail for {type} type is invalid: {offer_serializer.errors}")
+                offerdetail_serializer = OfferDetailSerializer(data=detail)
+                if not offerdetail_serializer.is_valid():
+                    raise serializers.ValidationError(f"Detail for {type} type is invalid: {offerdetail_serializer.errors}")
                 if not any(detail['offer_type'] == type for detail in offerdetails):
                     raise serializers.ValidationError(f"Offer must have a detail of type {type}.")
 
         return data
 
 
-class OfferRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
+
+class OfferUpdateSerializer(serializers.ModelSerializer):
+    details = OfferDetailSerializer(many=True)
+
+    class Meta:
+        model = Offer
+        fields = ['id', 'title', 'image', 'description', 'details']
+
+    def validate(self, data):
+        offerdetails = data.get('details', [])
+        if offerdetails:
+            for detail in offerdetails:
+                if not detail.get('offer_type') or detail.get('offer_type') not in ['basic', 'standard', 'premium']:
+                    raise serializers.ValidationError(f"Invalid offer type: {detail.get('offer_type')}. Must be one of 'basic', 'standard', 'premium'.")
+        return data
+
+    def update(self, instance, validated_data):
+        # Update the Offer instance
+        for attr, value in validated_data.items():
+            if attr != 'details':
+                setattr(instance, attr, value)
+        instance.save()
+
+        # Update the OfferDetail instances
+        details_data = validated_data.get('details', [])
+        for detail_data in details_data:
+            offer_detail = instance.details.get(offer_type=detail_data['offer_type'])
+            for attr, value in detail_data.items():
+                setattr(offer_detail, attr, value)
+            offer_detail.save()
+
+        return instance
+
+
+class OfferRetrieveDestroySerializer(serializers.ModelSerializer):
     details = OfferDetailLinkSerializer(many=True, read_only=True)
 
     class Meta:
