@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django_filters",
     "users",
     "offers",
+    "orders",
 ]
 
 AUTH_USER_MODEL = "users.User"
