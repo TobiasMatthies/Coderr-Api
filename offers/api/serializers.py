@@ -6,34 +6,39 @@ from users.api.serializers import UserDetailsSerializer
 class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfferDetail
-        fields = ['id', 'offer', 'title', 'revisions', 'delivery_time_in_days', 'price', 'features', 'offer_type']
-        read_only_fields = ('id', 'offer')
+        fields = ["id", "offer", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"]
+        read_only_fields = ("id", "offer")
+
+    def validate(self, data):
+        if 'offer_type' not in data or data['offer_type'] not in ["basic", "standard", "premium"]:
+            raise serializers.ValidationError("Invalid offer type. Must be one of 'basic', 'standard', 'premium'.")
+        return data
 
 
 class OfferDetailLinkSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = OfferDetail
-        fields = ['id', 'url']
+        fields = ["id", "url"]
         extra_kwargs = {
-            'url': {'view_name': 'offerdetail', 'lookup_field': 'pk'}
+            "url": {"view_name": "offerdetail", "lookup_field": "pk"}
         }
 
 
 class OfferListCreateSerializer(serializers.ModelSerializer):
-    user_details = UserDetailsSerializer(source='user', read_only=True)
+    user_details = UserDetailsSerializer(source="user", read_only=True)
     details = OfferDetailSerializer(many=True)
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
-        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'min_price', 'min_delivery_time', 'user_details', 'details']
-        read_only_fields = ('created_at', 'updated_at', 'min_price', 'min_delivery_time', 'user')
+        fields = ["id", "user", "title", "image", "description", "created_at", "updated_at", "min_price", "min_delivery_time", "user_details", "details"]
+        read_only_fields = ("created_at", "updated_at", "min_price", "min_delivery_time", "user")
 
 
     def create(self, validated_data):
-        detail_data = validated_data.pop('details')
-        user = self.context['request'].user
+        detail_data = validated_data.pop("details")
+        user = self.context["request"].user
 
         offer = Offer.objects.create(user=user, **validated_data)
         for detail in detail_data:
@@ -42,25 +47,25 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
 
 
     def get_min_price(self, instance):
-        return getattr(instance, 'min_price')
+        return getattr(instance, "min_price")
 
 
     def get_min_delivery_time(self, instance):
-        return getattr(instance, 'min_delivery_time')
+        return getattr(instance, "min_delivery_time")
 
 
     def validate(self, data):
-        offerdetails = data.get('details', [])
+        offerdetails = data.get("details", [])
 
         if len(offerdetails) != 3:
             raise serializers.ValidationError("An offer must have exactly 3 details.")
 
-        for type in ['basic', 'standard', 'premium']:
+        for type in ["basic", "standard", "premium"]:
             for detail in offerdetails:
                 offerdetail_serializer = OfferDetailSerializer(data=detail)
                 if not offerdetail_serializer.is_valid():
                     raise serializers.ValidationError(f"Detail for {type} type is invalid: {offerdetail_serializer.errors}")
-                if not any(detail['offer_type'] == type for detail in offerdetails):
+                if not any(detail["offer_type"] == type for detail in offerdetails):
                     raise serializers.ValidationError(f"Offer must have a detail of type {type}.")
 
         return data
@@ -72,27 +77,20 @@ class OfferUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Offer
-        fields = ['id', 'title', 'image', 'description', 'details']
-
-    def validate(self, data):
-        offerdetails = data.get('details', [])
-        if offerdetails:
-            for detail in offerdetails:
-                if not detail.get('offer_type') or detail.get('offer_type') not in ['basic', 'standard', 'premium']:
-                    raise serializers.ValidationError(f"Invalid offer type: {detail.get('offer_type')}. Must be one of 'basic', 'standard', 'premium'.")
-        return data
+        fields = ["id", "title", "image", "description", "details"]
+        read_only_fields = ("id", "created_at", "updated_at", "user",)
 
     def update(self, instance, validated_data):
         # Update the Offer instance
         for attr, value in validated_data.items():
-            if attr != 'details':
+            if attr != "details":
                 setattr(instance, attr, value)
         instance.save()
 
         # Update the OfferDetail instances
-        details_data = validated_data.get('details', [])
+        details_data = validated_data.get("details", [])
         for detail_data in details_data:
-            offer_detail = instance.details.get(offer_type=detail_data['offer_type'])
+            offer_detail = instance.details.get(offer_type=detail_data["offer_type"])
             for attr, value in detail_data.items():
                 setattr(offer_detail, attr, value)
             offer_detail.save()
@@ -105,5 +103,5 @@ class OfferRetrieveDestroySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Offer
-        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
-        read_only_fields = ('created_at', 'updated_at', 'min_delivery_time', 'user')
+        fields = ["id", "user", "title", "image", "description", "created_at", "updated_at", "details"]
+        read_only_fields = ("created_at", "updated_at", "min_delivery_time", "user")

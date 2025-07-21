@@ -7,6 +7,7 @@ class Order(models.Model):
     STATUS_CHOICES = [
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
     ]
 
     customer_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
