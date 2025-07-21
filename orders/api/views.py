@@ -35,14 +35,15 @@ class OrderUpdateDestroyAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIV
 
     def get_permissions(self):
         if self.request.method in ['PATCH']:
-            # check permissions for updating
             return [IsBusinessOwner()]
         if self.request.method in ['DELETE']:
             return [IsAdminUser()]
 
     def get_object(self):
         pk = self.kwargs.get('pk')
-        return get_object_or_404(self.queryset, pk=pk)
+        obj = get_object_or_404(self.queryset, pk=pk)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
