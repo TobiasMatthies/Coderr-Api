@@ -2,7 +2,7 @@ from rest_framework import serializers
 from offers.models import OfferDetail
 from orders.models import Order
 
-class OrderListCreateSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     business_user = serializers.PrimaryKeyRelatedField(source='offerdetail.offer.user', read_only=True)
     title = serializers.ReadOnlyField(source='offerdetail.title')
     revisions = serializers.ReadOnlyField(source='offerdetail.revisions')
@@ -21,3 +21,14 @@ class OrderListCreateSerializer(serializers.ModelSerializer):
         offer_detail = validated_data.pop('offer_detail_id')
         order = Order.objects.create(customer_user=self.context['request'].user, offerdetail = offer_detail, **validated_data)
         return order
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get('request', None)
+
+        if request and request.method == 'PATCH':
+            for field_name in fields:
+                if field_name != 'status':
+                    fields[field_name].read_only = True
+
+        return fields

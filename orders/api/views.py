@@ -1,14 +1,17 @@
 from django.db.models import Q
-from rest_framework.generics import ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from rest_framework.generics import GenericAPIView, ListCreateAPIView
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from users.api.permissions import IsCustomerUser
 from orders.models import Order
-from . serializers import OrderListCreateSerializer
+from . permissions import IsBusinessOwner
+from . serializers import OrderSerializer
 # Create your views here.
 
 
 class OrderListCreateAPIView(ListCreateAPIView):
-    serializer_class = OrderListCreateSerializer
+    serializer_class = OrderSerializer
 
     def get_permissions(self):
         if self.request.method in ['POST']:
@@ -23,3 +26,26 @@ class OrderListCreateAPIView(ListCreateAPIView):
 
         queryset = queryset.filter(Q(customer_user=user) | Q(offerdetail__offer__user=user))
         return queryset
+
+
+class OrderUpdateDestroyAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    http_method_names = ['patch', 'delete']
+
+    def get_permissions(self):
+        if self.request.method in ['PATCH']:
+            # check permissions for updating
+            return [IsBusinessOwner()]
+        if self.request.method in ['DELETE']:
+            return [IsAdminUser()]
+
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        return get_object_or_404(self.queryset, pk=pk)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
