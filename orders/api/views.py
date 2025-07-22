@@ -1,12 +1,15 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import GenericAPIView, ListCreateAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from users.api.permissions import IsCustomerUser
 from orders.models import Order
+from users.models import User
 from . permissions import IsBusinessOwner
-from . serializers import OrderSerializer
+from . serializers import OrderSerializer, OrderCountSerializer
 # Create your views here.
 
 
@@ -50,3 +53,48 @@ class OrderUpdateDestroyAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIV
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+# class OrderCountAPIView(ListAPIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request, *args, **kwargs):
+#         pk = self.kwargs.get('pk')
+#         get_object_or_404(User, pk=pk, type='business')
+#         queryset = Order.objects.filter(offerdetail__offer__user=pk)
+#         count = queryset.count()
+#         serializer = OrderCountSerializer({'count': count})
+#         return Response(serializer.data)
+
+
+
+class BaseOrderCountAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self, pk=None, status=None):
+        if pk is not None:
+            # Check if the user exists and is of type 'business'
+            get_object_or_404(User, pk=pk, type='business')
+            queryset = Order.objects.filter(offerdetail__offer__user=pk)
+            if status:
+                queryset = queryset.filter(status=status)
+            return queryset
+        return Order.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset(*args, **kwargs)
+        count = queryset.count()
+        serializer = OrderCountSerializer({'count': count})
+        return Response(serializer.data)
+
+
+class OrderCountAPIView(BaseOrderCountAPIView):
+    def get_queryset(self, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        return super().get_queryset(pk=pk)
+
+
+class CompletedOrderCountAPIView(BaseOrderCountAPIView):
+    def get_queryset(self, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        return super().get_queryset(pk=pk, status='completed')
