@@ -2,7 +2,6 @@ from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIVi
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
 from django.db.models import Min
 from django_filters.rest_framework import DjangoFilterBackend
 from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveDestroySerializer, OfferUpdateSerializer, OfferDetailSerializer

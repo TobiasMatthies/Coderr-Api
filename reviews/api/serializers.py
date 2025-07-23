@@ -17,6 +17,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         reviewer = self.context['request'].user
         business_user = data['business_user']
 
+        if business_user.type != 'business':
+            raise serializers.ValidationError("The business user must be of type 'business'.")
+
         if Review.objects.filter(business_user=business_user, reviewer=reviewer).exists():
             raise serializers.ValidationError("You have already reviewed this business user.")
 
