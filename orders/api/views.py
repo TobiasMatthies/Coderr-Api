@@ -55,19 +55,6 @@ class OrderUpdateDestroyAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIV
         return self.destroy(request, *args, **kwargs)
 
 
-# class OrderCountAPIView(ListAPIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request, *args, **kwargs):
-#         pk = self.kwargs.get('pk')
-#         get_object_or_404(User, pk=pk, type='business')
-#         queryset = Order.objects.filter(offerdetail__offer__user=pk)
-#         count = queryset.count()
-#         serializer = OrderCountSerializer({'count': count})
-#         return Response(serializer.data)
-
-
-
 class BaseOrderCountAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
