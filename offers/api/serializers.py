@@ -1,3 +1,4 @@
+from django.db.models import Min
 from offers.models import Offer, OfferDetail
 from rest_framework import serializers
 from users.api.serializers import UserDetailsSerializer
@@ -47,11 +48,16 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
 
 
     def get_min_price(self, instance):
-        return getattr(instance, "min_price")
+        if hasattr(instance, "min_price"):
+            return instance.min_price
+        return instance.details.aggregate(min_price=Min('price'))['min_price']
 
 
     def get_min_delivery_time(self, instance):
-        return getattr(instance, "min_delivery_time")
+        if hasattr(instance, "min_delivery_time"):
+            return instance.min_delivery_time
+        return instance.details.aggregate(min_delivery_time=Min('delivery_time_in_days'))['min_delivery_time']
+
 
 
     def validate(self, data):
