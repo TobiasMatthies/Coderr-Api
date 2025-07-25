@@ -25,3 +25,5 @@ urlpatterns = [
     path('api/', include('reviews.api.urls')),
     path('api/', include('base_info.api.urls')),
 ]
+
+handler404 = 'core.views.handler404'

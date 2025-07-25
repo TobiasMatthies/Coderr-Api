@@ -46,11 +46,8 @@ class ProfileSerializer(serializers.ModelSerializer):
     )
     username = serializers.CharField(source="user.username", read_only=True)
     type = serializers.CharField(source="user.type", read_only=True)
-    firstname = serializers.CharField(source="user.first_name", read_only=True)
-    lastname = serializers.CharField(source="user.last_name", read_only=True)
-    # Writeable user fields for update
-    first_name = serializers.CharField(write_only=True, required=False)
-    last_name = serializers.CharField(write_only=True, required=False)
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
     email = serializers.EmailField(source="user.email", required=False)
 
     class Meta:
@@ -63,8 +60,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             "user",
             "username",
             "type",
-            "firstname",
-            "lastname",
             "created_at",
             "first_name",
             "last_name",
@@ -73,26 +68,30 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
-        user_data = {}
-        user_fields = ["first_name", "last_name"]
-        for field in user_fields:
-            if field in validated_data:
-                user_data[field] = validated_data.pop(field)
+        user_data = validated_data.pop("user", {})
+        user = instance.user
 
-        # Handle email update separately
-        user_dict = validated_data.pop("user", None)
-        if user_dict and "email" in user_dict:
-            user_data["email"] = user_dict["email"]
+        user.first_name = user_data.get("first_name", user.first_name)
+        user.last_name = user_data.get("last_name", user.last_name)
+        user.email = user_data.get("email", user.email)
+        user.save()
+
         # Update Profile fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        # Update User fields
-        user = instance.user
-        for attr, value in user_data.items():
-            setattr(user, attr, value)
-        user.save()
         return instance
+
+    def to_representation(self, instance):
+        my_fields = self.fields.keys()
+        data = super().to_representation(instance)
+        for field in my_fields:
+            try:
+                if not data[field]:
+                    data[field] = ""
+            except KeyError:
+                pass
+        return data
 
 
 class ProfileListSerializer(serializers.ModelSerializer):
@@ -101,8 +100,8 @@ class ProfileListSerializer(serializers.ModelSerializer):
     )
     username = serializers.CharField(source="user.username", read_only=True)
     type = serializers.CharField(source="user.type", read_only=True)
-    firstname = serializers.CharField(source="user.first_name", read_only=True)
-    lastname = serializers.CharField(source="user.last_name", read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
 
     class Meta:
         model = Profile
@@ -114,7 +113,18 @@ class ProfileListSerializer(serializers.ModelSerializer):
             "user",
             "username",
             "type",
-            "firstname",
-            "lastname",
+            "first_name",
+            "last_name",
             "file",
         ]
+
+    def to_representation(self, instance):
+        my_fields = self.fields.keys()
+        data = super().to_representation(instance)
+        for field in my_fields:
+            try:
+                if not data[field]:
+                    data[field] = ""
+            except KeyError:
+                pass
+        return data
