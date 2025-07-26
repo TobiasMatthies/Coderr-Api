@@ -32,9 +32,3 @@ class OrderSerializer(serializers.ModelSerializer):
                     fields[field_name].read_only = True
 
         return fields
-
-class OrderCountSerializer(serializers.Serializer):
-    count = serializers.IntegerField()
-
-    def to_representation(self, instance):
-        return {'count': instance['count']}

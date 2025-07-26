@@ -9,7 +9,7 @@ from users.api.permissions import IsCustomerUser
 from orders.models import Order
 from users.models import User
 from . permissions import IsBusinessOwner
-from . serializers import OrderSerializer, OrderCountSerializer
+from . serializers import OrderSerializer
 # Create your views here.
 
 
@@ -57,6 +57,7 @@ class OrderUpdateDestroyAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIV
 
 class BaseOrderCountAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    count_key_name = 'count'  # Default key name
 
     def get_queryset(self, pk=None, status=None):
         if pk is not None:
@@ -71,17 +72,20 @@ class BaseOrderCountAPIView(APIView):
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset(*args, **kwargs)
         count = queryset.count()
-        serializer = OrderCountSerializer({'count': count})
-        return Response(serializer.data)
+        return Response({self.count_key_name: count})
 
 
 class OrderCountAPIView(BaseOrderCountAPIView):
+    count_key_name = 'order_count'
+
     def get_queryset(self, *args, **kwargs):
         pk = self.kwargs.get('pk')
         return super().get_queryset(pk=pk)
 
 
 class CompletedOrderCountAPIView(BaseOrderCountAPIView):
+    count_key_name = 'completed_order_count'
+
     def get_queryset(self, *args, **kwargs):
         pk = self.kwargs.get('pk')
         return super().get_queryset(pk=pk, status='completed')
