@@ -7,7 +7,7 @@ from users.api.serializers import UserDetailsSerializer
 class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfferDetail
-        fields = ["id", "offer", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"]
+        fields = ["id", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"]
         read_only_fields = ("id", "offer")
 
     def validate(self, data):
@@ -25,9 +25,8 @@ class OfferDetailLinkSerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
-class OfferListCreateSerializer(serializers.ModelSerializer):
+class OfferBaseSerializer(serializers.ModelSerializer):
     user_details = UserDetailsSerializer(source="user", read_only=True)
-    details = OfferDetailSerializer(many=True)
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
 
@@ -36,6 +35,23 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "title", "image", "description", "created_at", "updated_at", "min_price", "min_delivery_time", "user_details", "details"]
         read_only_fields = ("created_at", "updated_at", "min_price", "min_delivery_time", "user")
 
+    def get_min_price(self, instance):
+        if hasattr(instance, "min_price"):
+            return instance.min_price
+        return instance.details.aggregate(min_price=Min('price'))['min_price']
+
+    def get_min_delivery_time(self, instance):
+        if hasattr(instance, "min_delivery_time"):
+            return instance.min_delivery_time
+        return instance.details.aggregate(min_delivery_time=Min('delivery_time_in_days'))['min_delivery_time']
+
+
+class OfferListSerializer(OfferBaseSerializer):
+    details = OfferDetailLinkSerializer(many=True, read_only=True)
+
+
+class OfferCreateSerializer(OfferBaseSerializer):
+    details = OfferDetailSerializer(many=True)
 
     def create(self, validated_data):
         detail_data = validated_data.pop("details")
@@ -45,19 +61,6 @@ class OfferListCreateSerializer(serializers.ModelSerializer):
         for detail in detail_data:
             OfferDetail.objects.create(offer=offer, **detail)
         return offer
-
-
-    def get_min_price(self, instance):
-        if hasattr(instance, "min_price"):
-            return instance.min_price
-        return instance.details.aggregate(min_price=Min('price'))['min_price']
-
-
-    def get_min_delivery_time(self, instance):
-        if hasattr(instance, "min_delivery_time"):
-            return instance.min_delivery_time
-        return instance.details.aggregate(min_delivery_time=Min('delivery_time_in_days'))['min_delivery_time']
-
 
 
     def validate(self, data):
@@ -104,10 +107,8 @@ class OfferUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class OfferRetrieveDestroySerializer(serializers.ModelSerializer):
+class OfferRetrieveDestroySerializer(OfferBaseSerializer):
     details = OfferDetailLinkSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Offer
-        fields = ["id", "user", "title", "image", "description", "created_at", "updated_at", "details"]
-        read_only_fields = ("created_at", "updated_at", "min_delivery_time", "user")
+    class Meta(OfferBaseSerializer.Meta):
+        fields = ["id", "user", "title", "image", "description", "created_at", "updated_at", "min_price", "min_delivery_time", "details"]

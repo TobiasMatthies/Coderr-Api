@@ -4,7 +4,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.exceptions import ValidationError
 from django.db.models import Min
 from django_filters.rest_framework import DjangoFilterBackend
-from offers.api.serializers import OfferListCreateSerializer, OfferRetrieveDestroySerializer, OfferUpdateSerializer, OfferDetailSerializer
+from offers.api.serializers import OfferListSerializer, OfferCreateSerializer, OfferRetrieveDestroySerializer, OfferUpdateSerializer, OfferDetailSerializer
 from offers.models import Offer, OfferDetail
 from users.api.permissions import IsBusinessUser, IsOwner
 from offers.api.filters import OfferFilter
@@ -14,13 +14,17 @@ class OfferListCreateAPIView(ListCreateAPIView):
     """
     API view to list and create offers.
     """
-    serializer_class = OfferListCreateSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_class = OfferFilter
     ordering_fields = ['updated_at', 'min_price']
     ordering = ['updated_at']
     search_fields = ['title', 'description']
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return OfferCreateSerializer
+        return OfferListSerializer
 
     def get_queryset(self):
         queryset =  Offer.objects.all().prefetch_related('details')
@@ -69,6 +73,11 @@ class OfferRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Offer.objects.all()
     lookup_field = 'pk'
+
+    def get_queryset(self):
+        queryset = Offer.objects.all().prefetch_related('details')
+        queryset = queryset.annotate(min_price=Min('details__price'), min_delivery_time=Min('details__delivery_time_in_days'))
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == 'PATCH':
