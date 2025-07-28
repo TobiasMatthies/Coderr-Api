@@ -80,7 +80,7 @@ class OrderCountAPIView(BaseOrderCountAPIView):
 
     def get_queryset(self, *args, **kwargs):
         pk = self.kwargs.get('pk')
-        return super().get_queryset(pk=pk)
+        return super().get_queryset(pk=pk, status='in_progress')
 
 
 class CompletedOrderCountAPIView(BaseOrderCountAPIView):

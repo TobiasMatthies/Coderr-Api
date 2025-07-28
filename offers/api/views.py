@@ -53,17 +53,6 @@ class OfferListCreateAPIView(ListCreateAPIView):
                     'ordering': f"Invalid ordering fields: {', '.join(invalid_ordering_fields)}"
                 })
 
-        search = self.request.query_params.get('search')
-        if search:
-            invalid_search_fields = {
-                field for field in search.split(',')
-                if field not in allowed_search_fields
-            }
-            if invalid_search_fields:
-                raise ValidationError({
-                    'search': f"Invalid search fields: {', '.join(invalid_search_fields)}"
-                })
-
         return super().filter_queryset(queryset)
 
 
