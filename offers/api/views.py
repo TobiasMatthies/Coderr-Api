@@ -77,7 +77,7 @@ class OfferRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         if self.request.method in ['GET']:
             return [IsAuthenticated()]
         elif self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            return [IsOwner()]
+            return [IsAuthenticated(), IsBusinessUser(), IsOwner()]
         return super().get_permissions()
 
 
