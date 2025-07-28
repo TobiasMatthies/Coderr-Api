@@ -13,6 +13,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate(self, attrs):
+        """
+        Validate the given data.
+
+        Checks that the given password and repeated password match.
+        Also, checks that the given user type is valid.
+        """
         if attrs["password"] != attrs["repeated_password"]:
             raise serializers.ValidationError(
                 {"password": "Password fields didn't match."}
@@ -24,6 +30,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """
+        Create a new user instance.
+
+        Creates a new User instance with the given data.
+        Returns the created user instance.
+        """
         user = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"],
@@ -68,6 +80,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
+        """
+        Update a Profile instance with the given validated data.
+
+        Pops the user data from the validated data and updates the User instance with the given data.
+        Then, updates the Profile fields with the remaining data.
+        Finally, saves the Profile instance and returns it.
+        """
         user_data = validated_data.pop("user", {})
         user = instance.user
 
@@ -83,6 +102,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
+        """
+        Customize the representation of the Profile instance.
+
+        If any of the fields of the instance are empty, replace them with an empty string.
+        This is to prevent the API from returning None for empty fields.
+        """
         my_fields = self.fields.keys()
         data = super().to_representation(instance)
         for field in my_fields:
@@ -119,6 +144,12 @@ class ProfileListSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
+        """
+        Customize the representation of the Profile instance.
+
+        If any of the fields of the instance are empty, replace them with an empty string.
+        This is to prevent the API from returning None for empty fields.
+        """
         my_fields = self.fields.keys()
         data = super().to_representation(instance)
         for field in my_fields:

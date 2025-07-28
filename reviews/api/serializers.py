@@ -14,6 +14,11 @@ class ReviewListCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        """
+        Validate the given data.
+
+        Checks that the business user is of type 'business' and that the reviewer has not already reviewed this business user.
+        """
         reviewer = self.context['request'].user
         business_user = data['business_user']
 
@@ -26,6 +31,13 @@ class ReviewListCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        """
+        Create a new review instance.
+
+        Automatically assigns the current user as the reviewer of the review.
+        Returns the created review instance.
+        """
+
         validated_data['reviewer'] = self.context['request'].user
         return super().create(validated_data)
 

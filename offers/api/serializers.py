@@ -11,6 +11,10 @@ class OfferDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "offer")
 
     def validate(self, data):
+        """
+        Validate the given data.
+        Checks that the data contains a valid offer type.
+        """
         if 'offer_type' not in data or data['offer_type'] not in ["basic", "standard", "premium"]:
             raise serializers.ValidationError("Invalid offer type. Must be one of 'basic', 'standard', 'premium'.")
         return data
@@ -36,11 +40,24 @@ class OfferBaseSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at", "updated_at", "min_price", "min_delivery_time", "user")
 
     def get_min_price(self, instance):
+        """
+        Return the minimum price of the offer's details.
+
+        If the instance has a min_price attribute, return it. Otherwise, calculate the minimum price of the offer's details using an aggregate query.
+        """
         if hasattr(instance, "min_price"):
             return instance.min_price
         return instance.details.aggregate(min_price=Min('price'))['min_price']
 
     def get_min_delivery_time(self, instance):
+        """
+        Return the minimum delivery time of the offer's details.
+
+        If the instance has a min_delivery_time attribute, return it.
+        Otherwise, calculate the minimum delivery time of the offer's details
+        using an aggregate query.
+        """
+
         if hasattr(instance, "min_delivery_time"):
             return instance.min_delivery_time
         return instance.details.aggregate(min_delivery_time=Min('delivery_time_in_days'))['min_delivery_time']
@@ -54,6 +71,13 @@ class OfferCreateSerializer(OfferBaseSerializer):
     details = OfferDetailSerializer(many=True)
 
     def create(self, validated_data):
+        """
+        Create an offer and its details.
+
+        Pop the details from the validated data and create an Offer with the remaining data.
+        Then, create each of the details from the popped data and assign them to the offer.
+        Finally, return the created offer.
+        """
         detail_data = validated_data.pop("details")
         user = self.context["request"].user
 
@@ -64,6 +88,12 @@ class OfferCreateSerializer(OfferBaseSerializer):
 
 
     def validate(self, data):
+        """
+        Validate the given data.
+
+        Checks that the data contains exactly 3 details with distinct types.
+        Also validates each detail using the OfferDetailSerializer.
+        """
         offerdetails = data.get("details", [])
 
         if len(offerdetails) != 3:
@@ -90,13 +120,19 @@ class OfferUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "created_at", "updated_at", "user",)
 
     def update(self, instance, validated_data):
-        # Update the Offer instance
+        """
+        Update the given offer instance with the validated data.
+
+        Updates the offer with the given title, image, and description.
+        Then, updates each of the offer's details with the given data.
+        Returns the updated offer instance.
+        """
+
         for attr, value in validated_data.items():
             if attr != "details":
                 setattr(instance, attr, value)
         instance.save()
 
-        # Update the OfferDetail instances
         details_data = validated_data.get("details", [])
         for detail_data in details_data:
             offer_detail = instance.details.get(offer_type=detail_data["offer_type"])

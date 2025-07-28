@@ -18,11 +18,24 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'customer_user']
 
     def create(self, validated_data):
+        """
+        Create a new order instance.
+
+        Creates a new Order instance with the customer user as the request user, the given offer detail and the validated data.
+        Returns the created order instance.
+        """
         offer_detail = validated_data.pop('offer_detail_id')
         order = Order.objects.create(customer_user=self.context['request'].user, offerdetail = offer_detail, **validated_data)
         return order
 
     def get_fields(self):
+        """
+        Customize fields for the serializer based on the request method.
+
+        If the request method is 'PATCH', set all fields to read-only except 'status'.
+        Returns the modified fields.
+        """
+
         fields = super().get_fields()
         request = self.context.get('request', None)
 

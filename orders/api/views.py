@@ -10,7 +10,6 @@ from orders.models import Order
 from users.models import User
 from . permissions import IsBusinessOwner
 from . serializers import OrderSerializer
-# Create your views here.
 
 
 class OrderListCreateAPIView(ListCreateAPIView):
@@ -24,6 +23,12 @@ class OrderListCreateAPIView(ListCreateAPIView):
         return super().get_permissions()
 
     def get_queryset(self):
+        """
+        Return a queryset of all orders that are associated with the current user either as the customer or as the business owner.
+
+        :return: A queryset of Order objects
+        :rtype: QuerySet
+        """
         queryset = Order.objects.all()
         user = self.request.user
 
@@ -60,8 +65,10 @@ class BaseOrderCountAPIView(APIView):
     count_key_name = 'count'  # Default key name
 
     def get_queryset(self, pk=None, status=None):
+        """
+        Get the queryset of orders for the given user and status.
+        """
         if pk is not None:
-            # Check if the user exists and is of type 'business'
             get_object_or_404(User, pk=pk, type='business')
             queryset = Order.objects.filter(offerdetail__offer__user=pk)
             if status:
@@ -70,6 +77,9 @@ class BaseOrderCountAPIView(APIView):
         return Order.objects.all()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return the count of orders for the given user and status.
+        """
         queryset = self.get_queryset(*args, **kwargs)
         count = queryset.count()
         return Response({self.count_key_name: count})

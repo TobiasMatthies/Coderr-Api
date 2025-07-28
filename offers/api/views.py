@@ -27,6 +27,9 @@ class OfferListCreateAPIView(ListCreateAPIView):
         return OfferListSerializer
 
     def get_queryset(self):
+        """
+        Return a queryset of offers that are visible to the current user.
+        """
         queryset =  Offer.objects.all().prefetch_related('details')
         queryset = queryset.annotate(min_price=Min('details__price'), min_delivery_time=Min('details__delivery_time_in_days'))
         return queryset
@@ -39,8 +42,15 @@ class OfferListCreateAPIView(ListCreateAPIView):
         return super().get_permissions()
 
     def filter_queryset(self, queryset):
+        """
+        Filter the queryset based on the given request query parameters.
+
+        If the "ordering" query parameter is given, check that the given
+        fields are valid ordering fields. If not, raise a ValidationError.
+
+        Return the filtered queryset.
+        """
         allowed_ordering_fields = set(self.ordering_fields)
-        allowed_search_fields = set(self.search_fields)
 
         ordering = self.request.query_params.get('ordering')
         if ordering:
@@ -64,6 +74,11 @@ class OfferRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
     def get_queryset(self):
+        """
+        Return a queryset of all offers, prefetched with their details,
+        and annotated with the minimum price and delivery time of the
+        offer's details.
+        """
         queryset = Offer.objects.all().prefetch_related('details')
         queryset = queryset.annotate(min_price=Min('details__price'), min_delivery_time=Min('details__delivery_time_in_days'))
         return queryset

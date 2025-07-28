@@ -8,5 +8,11 @@ from . serializers import BaseInfoSerializer
 class BaseInfoAPIView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
+        """
+        Returns the base info of the API.
+
+        :param request: The request object
+        :return: A Response object with the base info
+        """
         serializer = BaseInfoSerializer(instance={})
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -13,6 +13,14 @@ class RegistrationAPIView(ObtainAuthToken):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle user registration and return an authentication token.
+
+        Validates the registration data using the UserRegistrationSerializer.
+        If the data is valid, a new user is created and a token is generated
+        for the user. Returns a response containing the token and user details.
+        """
+
         serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -32,6 +40,13 @@ class LoginAPIView(ObtainAuthToken):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle user login and return an authentication token.
+
+        Validates the login data using the serializer.
+        If the data is valid, a token is generated for the user.
+        Returns a response containing the token and user details.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
@@ -78,6 +93,15 @@ class ProfileListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Return a queryset of user profiles filtered by profile type.
+
+        Retrieves the profile type from the URL parameters and filters the
+        Profile queryset accordingly. If the profile type is 'business',
+        returns profiles of business users. If the profile type is 'customer',
+        returns profiles of customer users.
+        """
+
         profile_type = self.kwargs.get("profile_type")
 
         if profile_type == "business":
