@@ -37,5 +37,5 @@ class OfferFilter(django_filters.FilterSet):
                 filter=Q(details__delivery_time_in_days__lte=value)
             )
         ).filter(
-            matching_details_count=3
+            matching_details_count__gte=1
         )
