@@ -21,4 +21,4 @@ virtualenv==20.21.0
 virtualenv-clone==0.5.7
 whitenoise==6.9.0
 gunicorn==23.0.0
-psycopg[binary]==3.2.9
+psycopg[binary]==3.3.9
